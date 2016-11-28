@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import time
 import pandas as pd
 
 def matrix_factorization(r, k, iters=2, threshold=50000, l=.001, g=.02):
@@ -18,9 +17,9 @@ def matrix_factorization(r, k, iters=2, threshold=50000, l=.001, g=.02):
         for u, i in r_nonzero_index:
             if r[u][i] == 0:
                 continue
-            e = r[u][i] - np.dot(p[u], q[i].T) #Calculate error
+            e = r[u][i] - np.dot(p[u], q[i].T) #Calculate prediction error
             #Update parameters
-            q[i] +=  g * (e*p[u] - l*q[i])
+            q[i] += g * (e*p[u] - l*q[i])
             p[u] += g * (e*q[i] - l*p[u])
         train_error = root_mean_squared_error(np.dot(p, q.T), base_file)
         test_error = root_mean_squared_error(np.dot(p, q.T), test_file)
@@ -72,16 +71,14 @@ for i in range(k):
 
     user_item = user_item.values
     user_item_test = user_item_test.values
-    print 'Start Fold{}'.format(i+1)
     r_hat = matrix_factorization(user_item, 10, iters=30, threshold=90000, l=1e-6, g=1e-3) #Calculate MF
     r_model = generate_base_model(user_item) #Generate evaluation about base line model of average for each item
     e = root_mean_squared_error(r_hat, test_file) #Evaluate MS with RMSE
     base_e = root_mean_squared_error(r_model, test_file) #Evaluate base model with RMSE
     error_list.append(e)
     base_error_list.append(base_e)
-    print 'CV Fold{} error: {:.6f}'.format(i+1, e)
-    print 'CV Fold{} base error: {:.6f}'.format(i+1, base_e)
+    print 'CV(MF) Fold{} error: {:.6f}'.format(i+1, e)
+    print 'CV(base)  Fold{} error: {:.6f}'.format(i+1, base_e)
 
-print 'CV mean: {}, std: {}'.format(np.mean(error_list), np.std(error_list))
-print 'CV mean: {}, std: {}'.format(np.mean(base_error_list), np.std(base_error_list))
-
+print 'CV(MF) mean: {}, std: {}'.format(np.mean(error_list), np.std(error_list))
+print 'CV(base) mean: {}, std: {}'.format(np.mean(base_error_list), np.std(base_error_list))
